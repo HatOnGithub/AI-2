@@ -96,11 +96,11 @@ class ReflexAgent(Agent):
             closestFoodDistance = min (closestFoodDistance, manhattanDistance(newPos, food))
 
         fear    = 1
-        desire  = 1
+        desire  = 20
 
-        score -= 10 / max (1, closestGhostDistance * fear)
+        score -= 10 / max (1, closestGhostDistance * desire)
 
-        score += 10 / max (1, closestFoodDistance  * desire)
+        score += 10 / max (1, closestFoodDistance  * fear)
 
         score += (len(currentGameState.getFood().asList()) - len(newFood)) * 20
         
