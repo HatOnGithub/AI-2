@@ -70,12 +70,43 @@ class ReflexAgent(Agent):
         # Useful information you can extract from a GameState (pacman.py)
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
+        newFood = successorGameState.getFood().asList()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+
+        # it appears that the weakly types thingy of python comes in handy here
+        if successorGameState.isLose():
+            return float ('-inf')
+        
+        if successorGameState.isWin():
+            return float ('+inf')
+        
+        score = successorGameState.getScore()
+
+        closestGhostDistance = manhattanDistance(newPos, newGhostStates[0].getPosition())
+        for ghostState in newGhostStates:
+            closestGhostDistance = min(closestGhostDistance, manhattanDistance(newPos, ghostState.getPosition())) / (1 + ghostState.scaredTimer * 0.1)
+
+        closestFoodDistance = 0
+        if len(newFood) > 0:
+            closestFoodDistance = manhattanDistance(newPos, newFood[0])
+        for food in newFood:
+            closestFoodDistance = min (closestFoodDistance, manhattanDistance(newPos, food))
+
+        fear    = 1
+        desire  = 1
+
+        score -= 10 / max (1, closestGhostDistance * fear)
+
+        score += 10 / max (1, closestFoodDistance  * desire)
+
+        score += (len(currentGameState.getFood().asList()) - len(newFood)) * 20
+        
+        if action == 'Stop': score -= 50
+
+        return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
