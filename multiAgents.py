@@ -184,13 +184,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
 
         def minimum(id : int, gs : GameState, depth : int) -> float:
-            # Ghost's turn, multiple successor generations
-            if gs.isWin() or gs.isLose() or depth == self.depth: 
+            # Ghost's turn, multiple successor generations / runs of minimum
+
+            # evaluate 
+            if gs.isWin() or gs.isLose(): 
                 return self.evaluationFunction(gs)
             
             lowestFound = float('+inf')
             actions = gs.getLegalActions(id)
-
             if id + 1 == gs.getNumAgents():
                 for action in actions:
                     lowestFound = min(lowestFound, maximum(gs.generateSuccessor(id, action), depth + 1))
