@@ -142,6 +142,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (question 2)
     """
+    
 
     def getAction(self, gameState: GameState):
         """
@@ -167,7 +168,44 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def maximum(gs : GameState, depth : int) -> float:
+            # Pacman's turn, single generation of successor
+            if gs.isWin() or gs.isLose() or depth == self.depth: 
+                return self.evaluationFunction(gs)
+            
+            actions = gs.getLegalActions()
+            highestFound = float('-inf')
+            for action in actions:
+                highestFound = max(highestFound, minimum(1, gs.generateSuccessor(0, action), depth))
+
+            return highestFound
+
+
+
+        def minimum(id : int, gs : GameState, depth : int) -> float:
+            # Ghost's turn, multiple successor generations
+            if gs.isWin() or gs.isLose() or depth == self.depth: 
+                return self.evaluationFunction(gs)
+            
+            lowestFound = float('+inf')
+            actions = gs.getLegalActions(id)
+
+            if id + 1 == gs.getNumAgents():
+                for action in actions:
+                    lowestFound = min(lowestFound, maximum(gs.generateSuccessor(id, action), depth + 1))
+            else:    
+                for action in actions:
+                    lowestFound = min(lowestFound, minimum(id + 1, gs.generateSuccessor(id, action), depth))
+
+            return lowestFound
+    
+
+        actions = gameState.getLegalActions()
+        return max(actions, key= lambda action : minimum(1, gameState.generateSuccessor(0, action), 0))
+    
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
