@@ -171,9 +171,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         def maximum(gs : GameState, depth : int) -> float:
             # Pacman's turn, single generation of successor
+
+            # evaluate if win, loss or depth reached
             if gs.isWin() or gs.isLose() or depth == self.depth: 
                 return self.evaluationFunction(gs)
             
+            # find the best move using minimax on all possible actions
             actions = gs.getLegalActions()
             highestFound = float('-inf')
             for action in actions:
@@ -186,15 +189,19 @@ class MinimaxAgent(MultiAgentSearchAgent):
         def minimum(id : int, gs : GameState, depth : int) -> float:
             # Ghost's turn, multiple successor generations / runs of minimum
 
-            # evaluate 
+            # evaluate if win or lose
             if gs.isWin() or gs.isLose(): 
                 return self.evaluationFunction(gs)
             
+            # find the best move for the ghost
             lowestFound = float('+inf')
             actions = gs.getLegalActions(id)
+
+            # if the next turn is Pacman's, use the maximum
             if id + 1 == gs.getNumAgents():
                 for action in actions:
                     lowestFound = min(lowestFound, maximum(gs.generateSuccessor(id, action), depth + 1))
+            # else, continue with the next ghost's move
             else:    
                 for action in actions:
                     lowestFound = min(lowestFound, minimum(id + 1, gs.generateSuccessor(id, action), depth))
