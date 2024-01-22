@@ -177,8 +177,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 return self.evaluationFunction(gs)
             
             # find the best move using minimax on all possible actions
-            actions = gs.getLegalActions()
             highestFound = float('-inf')
+
+            actions = gs.getLegalActions()
+            if 'Stop' in actions: actions.remove('Stop')
+
             for action in actions:
                 highestFound = max(highestFound, minimum(1, gs.generateSuccessor(0, action), depth))
 
@@ -195,7 +198,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
             
             # find the best move for the ghost
             lowestFound = float('+inf')
+
             actions = gs.getLegalActions(id)
+            if 'Stop' in actions: actions.remove('Stop')
 
             # if the next turn is Pacman's, use the maximum
             if id + 1 == gs.getNumAgents():
@@ -207,11 +212,18 @@ class MinimaxAgent(MultiAgentSearchAgent):
                     lowestFound = min(lowestFound, minimum(id + 1, gs.generateSuccessor(id, action), depth))
 
             return lowestFound
-    
 
-        actions = gameState.getLegalActions()
-        return max(actions, key= lambda action : minimum(1, gameState.generateSuccessor(0, action), 0))
     
+        # Collect legal moves and successor states
+        legalMoves = gameState.getLegalActions()
+
+        # Choose one of the best actions
+        scores = [minimum(1, gameState.generateSuccessor(0, action), 0) for action in legalMoves]
+        bestScore = max(scores)
+        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
+        chosenIndex = random.choice(bestIndices)
+
+        return legalMoves[chosenIndex]
 
 
 
@@ -219,14 +231,78 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
-
+    
     def getAction(self, gameState: GameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+            
+        def maximum(gs : GameState, depth : int, a, b) -> float:
+            # Pacman's turn, single generation of successor
 
+            # evaluate if win, loss or depth reached
+            if gs.isWin() or gs.isLose() or depth == self.depth: 
+                return self.evaluationFunction(gs)
+            
+            # find the best move using minimax on all possible actions
+            v = float('-inf')
+
+            actions = gs.getLegalActions()
+            if 'Stop' in actions: actions.remove('Stop')
+
+            for action in actions:
+                v = max(v, minimum(1, gs.generateSuccessor(0, action), depth, a, b))
+                a = max(a, v)
+                if v > b: return v
+            return v
+
+
+
+        def minimum(id : int, gs : GameState, depth : int, a, b) -> float:
+            # Ghost's turn, multiple successor generations / runs of minimum
+
+            # evaluate if win or lose
+            if gs.isWin() or gs.isLose(): 
+                return self.evaluationFunction(gs)
+            
+            # find the best move for the ghost
+            v = float('+inf')
+
+            actions = gs.getLegalActions(id)
+            if 'Stop' in actions: actions.remove('Stop')
+
+            # if the next turn is Pacman's, use the maximum
+            if id + 1 == gs.getNumAgents():
+                for action in actions:
+                    v = min(v, maximum(gs.generateSuccessor(id, action), depth + 1, a, b))
+                    b = min (b, v)
+                    if v < a: return v
+            # else, continue with the next ghost's move
+            else:    
+                for action in actions:
+                    v = min(v, minimum(id + 1, gs.generateSuccessor(id, action), depth, a, b))
+                    b = min (b, v)
+                    if v < a: return v
+            return v
+
+        
+        v = float('-inf')
+        alpha = float('-inf')
+
+        actions = gameState.getLegalActions()
+        if 'Stop' in actions: actions.remove('Stop')
+
+        # the first moves must also update the alpha and beta values
+        for action in actions:
+            sucv = minimum(1, gameState.generateSuccessor(0, action), 0, alpha, float('+inf'))
+            if sucv > v:
+                v = sucv
+                ba = action
+            alpha = max(alpha, v)
+
+        return ba
+    
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
